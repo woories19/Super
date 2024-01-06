@@ -20,4 +20,9 @@ RegisterNetEvent('superv2:whitelist', function()
     end
 end)
 
+RegisterNetEvent("superv3:ValidateAF", function(a, b)
+    TriggerClientEvent("superv3:ApplyForce", -1, a, b)
+    print('validating')
+end)
+
 
