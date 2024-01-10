@@ -13,8 +13,6 @@ player.aceRun = false
 player.aceFly = false
 player.aceJump = false
 
-local g = true
-
 TriggerServerEvent('superv2:whitelist')
 RegisterNetEvent('passed:whitelist', function(perms)
     local next = next
@@ -35,14 +33,6 @@ RegisterNetEvent('passed:whitelist', function(perms)
         end
     end
 end)
-
-function chat(str)
-    TriggerEvent('chat:addMessage', {
-        color = {255,255,255},
-        multiline = true,
-        args = {"System", str}
-    })
-end
 
 function super()
     local playerPed = GetPlayerPed()
@@ -65,6 +55,7 @@ function super()
         end
     end
 end
+
 Citizen.CreateThread(function()
     while (true) do
         Citizen.Wait(0)
@@ -102,12 +93,7 @@ Citizen.CreateThread(function()
     end
 end)
 
--- Get Ped In Direction
-function castRay( coordFrom, coordTo )
-    local rayHandle = StartShapeTestLosProbe( coordFrom.x, coordFrom.y, coordFrom.z - 0.3, coordTo.x, coordTo.y, coordTo.z, 4294967295, GetPlayerPed( -1 ), 4 )
-    local _, hit, endCoords, _, entity = GetRaycastResult( rayHandle )
-    return entity
-end
+
 
 --[[ 
 Citizen.CreateThread(function()
@@ -190,35 +176,6 @@ function superPunch(entity)
     end
 end
 
-function RotationToDirection(rotation)
-	local adjustedRotation = 
-	{ 
-		x = (math.pi / 180) * rotation.x, 
-		y = (math.pi / 180) * rotation.y, 
-		z = (math.pi / 180) * rotation.z 
-	}
-	local direction = 
-	vector3(
-		-math.sin(adjustedRotation.z) * math.abs(math.cos(adjustedRotation.x)), 
-		math.cos(adjustedRotation.z) * math.abs(math.cos(adjustedRotation.x)), 
-		math.sin(adjustedRotation.x))
-	return direction
-end
-
-function RayCastGamePlayCamera(distance)
-	local cameraRotation = GetGameplayCamRot()
-	local cameraCoord = GetGameplayCamCoord()
-	local direction = RotationToDirection(cameraRotation)
-	local destination = 
-	{ 
-		x = cameraCoord.x + direction.x * distance, 
-		y = cameraCoord.y + direction.y * distance, 
-		z = cameraCoord.z + direction.z * distance 
-	}
-	local a, b, c, d, e = GetShapeTestResult(StartShapeTestRay(cameraCoord.x, cameraCoord.y, cameraCoord.z, destination.x, destination.y, destination.z, 4294967295, PlayerPedId(), 4))
-	return b, c, e, destination
-end
-
 function castLaser()
     local playerPed = PlayerPedId()
     local index = GetPedBoneIndex(playerPed, 0x6B52)
@@ -235,27 +192,12 @@ function castLaser()
     end
 end
 
-function LoadAnimDict(dict)
-    RequestAnimDict(dict)
-    
-    while not HasAnimDictLoaded(dict) do
-      Wait(500)
-    end
-end
-
-
-
-RegisterNetEvent("superv3:ApplyForce", function(rightVector, attachedEntity)
-    print("applying force")
-
-    ApplyForceToEntity(attachedEntity, 1, rightVector.x * 40000.0, rightVector.y * 40000.0, rightVector.z + 10000.0, 0.0, 0.0, 0.0, 0, false, true, true, false, true)
+RegisterNetEvent("superv3:ApplyForce", function(e, v)
+    ApplyForceToEntity(v, 1, e.x * 40000.0, e.y * 40000.0, e.z + 10000.0, 0.0, 0.0, 0.0, 0, false, true, true, false, true)
 end)
-
-
 
 local isAttached = false
 local attachedE = nil
-local carryAnim = true
 function grabVeh()
     local playerPed = PlayerPedId()  
     local index = GetEntityBoneIndexByName(playerPed, "BONETAG_R_FINGER11")
@@ -290,14 +232,110 @@ function grabVeh()
     end
 end
 
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+local ras = nil
+local rasState = false
+local rasIdle = false
+local particles = {}
+
+function rasengan()
+    local playerPed = PlayerPedId()
+    local pCoords = GetEntityCoords(playerPed)
+    local pRot = GetEntityRotation(playerPed, 2)
+    local _, rV, _, pos = GetEntityMatrix(playerPed)
+    local cPos = vector3(pos.x + rV.x/2, pos.y + rV.y/2, pos.z - 0.4)
+    local c = GetEntityCoords(ras)
+    --local rasDeb = DrawSphere(c.x, c.y, c.z, 0.05, 255, 0, 0, 1.0)
+    
+    if IsControlJustReleased(0, 38) then
+        rasState = not rasState
+        rasIdle = not rasIdle
+        if rasState then
+            local model = "w_ex_snowball"
+            local hash = GetHashKey(model)
+            RequestModel(hash)
+            while not HasModelLoaded(hash) do
+                Citizen.Wait(0)
+            end
+            local e = CreateObject(model, cPos.x, cPos.y, cPos.z, true, true, false)
+            ras = e
+            SetEntityAlpha(ras, 0, false)
+        else  
+            for i = 0, 100, 1 do
+                Citizen.Wait(10)
+                local fV, _, _, p = GetEntityMatrix(ras)
+                print(i)
+                
+                if i > 1 and i < 3 then
+                    AddExplosion(pCoords.x, pCoords.y, pCoords.z + 1.3, 70, 10000000000.0, false, false, 0)
+                end
+
+                if i > 1 and i < 50 then
+                    
+                    UseParticleFxAsset("core")
+                    local a = StartNetworkedParticleFxNonLoopedOnEntity("ent_dst_electrical", ras, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, false, false, false)
+                    table.insert(particles, a)
+                    UseParticleFxAsset("core")
+                    local b = StartNetworkedParticleFxNonLoopedOnEntity("ent_dst_elec_fire", ras, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, false, false, false)
+                    table.insert(particles, b)
+                    UseParticleFxAsset("core")
+                    local c = StartNetworkedParticleFxLoopedOnEntity("ent_amb_foundry_arc_heat", ras, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, false, false, false)
+                    table.insert(particles, c)
+                    UseParticleFxAsset("core")
+                    local d = StartNetworkedParticleFxLoopedOnEntity("ent_amb_sparking_wires", ras, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, false, false, false)
+                    table.insert(particles, d)
+                end
+                
+                
+                if i <= 70 then
+                    SetEntityCoords(ras, p.x + fV.x/3, p.y + fV.y/3, p.z)
+                elseif i > 70 then
+                    SetEntityCoords(ras, p.x + fV.x/3, p.y + fV.y/3, p.z + 0.1)
+                end
+
+                if i == 100 then
+                    ras = nil
+                    
+                    for _, particle in ipairs(particles) do
+                        StopParticleFxLooped(particle, true)
+                    end
+                    
+                end
+            end            
+        end
+    end
+
+    if ras ~= nil and rasIdle then
+        SetEntityCoords(ras, cPos.x, cPos.y, cPos.z, false, false, false, false)
+        SetEntityRotation(ras, pRot.x, pRot.y, pRot.z, 2)
+        --local dest = GetOffsetFromEntityInWorldCoords(ras, 0.0, 60.0, 0.0)
+        
+        UseParticleFxAsset("core")
+        StartNetworkedParticleFxNonLoopedOnEntity("ent_anim_paparazzi_flash", ras, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5, true, false, false)
+
+        --table.insert(particles, p1)
+    end
+
+    --local p = "veh_sub_crush" -- good but resource heavy
+    --local p = "proj_laser_enemy" -- for laser eyes
+    --local p = "ent_dst_elec_fire" -- good
+    --local p = "ent_amb_foundry_arc_heat" -- good
+    --local p = "ent_amb_sparking_wires" -- good
+    --local p = "ent_dst_electrical" -- good
+
+end
+
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(0)
         local playerPed = PlayerPedId()
-        local playerCoords = GetEntityCoords(playerPed)
-        local coordsOffset = GetOffsetFromEntityInWorldCoords(playerPed, 0.0, 25.0, -0.5)
-        grabVeh()
-        --castLaser()
+        --local playerCoords = GetEntityCoords(playerPed)
+        --local coordsOffset = GetOffsetFromEntityInWorldCoords(playerPed, 0.0, 25.0, -0.5)
+
+        rasengan()
+        --grabVeh()
+        --*castLaser()
         --local e = castRay( playerCoords, coordsOffset )
 
 

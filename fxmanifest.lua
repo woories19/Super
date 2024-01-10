@@ -12,6 +12,7 @@ client_scripts {
     'bin/client.lua',
     'bin/powers.lua',
     'bin/ui.lua',
+    'bin/base.lua'
 }
 
 server_scripts {

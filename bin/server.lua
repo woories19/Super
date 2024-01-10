@@ -3,7 +3,6 @@ AddEventHandler('playerJoining', function()
     for k, v in pairs(data) do
         if GetPlayerIdentifiers(source)[1] == data[k] then
             print(data[k])
-            print('wow')
             print("Player "..GetPlayerName(source).." is joining with whitelist!")
         end
     end
@@ -21,8 +20,15 @@ RegisterNetEvent('superv2:whitelist', function()
 end)
 
 RegisterNetEvent("superv3:ValidateAF", function(a, b)
-    TriggerClientEvent("superv3:ApplyForce", -1, a, b)
-    print('validating')
+    TriggerClientEvent("superv3:ApplyForce", source, a, b)
+end)
+
+RegisterNetEvent("superv3:DeleteEntity", function(entity)
+    if not DoesEntityExist(entity) then
+
+        return
+    end
+    DeleteEntity(entity)
 end)
 
 

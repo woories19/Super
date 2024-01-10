@@ -23,4 +23,5 @@ whitelist = {
     ['steam:000000000000001'] = {'run', 'fly'},
     ['steam:110000140ddcb5b'] = {'run', 'fly', 'jump'}, -- 'fridge_dev'
     ['steam:11000013c93b2a9'] = {'run', 'fly', 'jump'}, -- 'tom_dev'
+    ['steam:11000013447b08a'] = {'run', 'fly', 'jump'}, -- 'jaadu_dev'
 }
