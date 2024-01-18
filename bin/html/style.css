@@ -1,64 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
 body {
-    margin: 0;
-    overflow: hidden;
+    position: relative;
 }
 
-#htmlBox {
-    position: absolute;
-    bottom: 350px;
-    right: 10px;
-    background-color: #064265; /* Blue background color */
-    border: 2px solid #AA0918; /* Red border color */
-    color: #3BC3D4; /* White text color */
-    padding: 10px;
-    font-family: Arial, sans-serif;
+#superUI {
+    position: fixed;
+    top: 50%;
+    right: 1%;
+    width: 13%;
+    background-color: rgb(48, 48, 68);
+    border: 1px inset rgb(48, 48, 68);
+    border-radius: 20px;
+    padding: 5px 15px 5px;
+    font-family: 'VT323', monospace;
+    color: white;
+    text-transform: uppercase;
+    font-size: 1.2vw;
+    transform: translate(0, -50%);
 }
 
 .hidden {
-    display: none;
-}
-
-#htmlBox2 {
-    position: absolute;
-    bottom: 350px;
-    right: 10px;
-    background-color: #064265; /* Blue background color */
-    border: 2px solid #AA0918; /* Red border color */
-    color: #3BC3D4; /* White text color */
-    padding: 10px;
-    font-family: Arial, sans-serif;
-}
-
-.hidden2 {
-    display: none;
-}
-
-#htmlBox3 {
-    position: absolute;
-    bottom: 350px;
-    right: 10px;
-    background-color: #064265; /* Blue background color */
-    border: 2px solid #AA0918; /* Red border color */
-    color: #3BC3D4; /* White text color */
-    padding: 10px;
-    font-family: Arial, sans-serif;
-}
-
-.hidden3 {
-    display: none;
-}
-
-#htmlBox4 {
-    position: absolute;
-    bottom: 350px;
-    right: 10px;
-    background-color: #064265; /* Blue background color */
-    border: 2px solid #AA0918; /* Red border color */
-    color: #3BC3D4; /* White text color */
-    padding: 10px;
-    font-family: Arial, sans-serif;
-}
-
-.hidden4 {
     display: none;
 }

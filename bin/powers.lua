@@ -1,4 +1,7 @@
 local a = {}
+local toggleRas = false
+local toggleGV = false
+local toggleLaser = false
 
 function func_522(d, e, f)
     local g;
@@ -33,12 +36,43 @@ local function o(self)
                 end
                 SetPedCanRagdoll(r, false)
                 SetPlayerFallDistance(PlayerId(), 1000.0)
-                if IsControlJustPressed(0, superConfig.fly) and player.aceFly then
-                    self:toggleFly()
+
+                DisableControlAction(0, 157, true)
+                DisableControlAction(0, 158, true)
+                DisableControlAction(0, 160, true)
+                DisableControlAction(0, 164, true)
+                DisableControlAction(0, 165, true)
+
+                if IsControlPressed(0, 21) then
+                    if IsDisabledControlJustReleased(0, 157) and player.aceFly then
+                        self:toggleFly()
+                    end
+                    if IsDisabledControlJustReleased(0, 158) and player.aceRun then
+                        self:togglePowerRun()
+                    end
+                    if IsDisabledControlJustReleased(0, 160) then
+                        toggleLaser = not toggleLaser
+                    end
+                    if IsDisabledControlJustReleased(0, 164) then
+                        toggleGV = not toggleGV
+                    end
+                    if IsDisabledControlJustReleased(0, 165) then
+                        toggleRas = true
+                    end
                 end
-                if IsControlJustPressed(0, superConfig.run) and player.aceRun then
-                    self:togglePowerRun()
+
+                if toggleLaser then
+                    castLaser()
                 end
+
+                if toggleGV then
+                    grabVeh()
+                end
+
+                if toggleRas then
+                    rasengan()
+                end
+
                 if not self.power_run then
                     local u = self.ped.getCoords;
                     local v, w = GetGroundZFor_3dCoord(u.x, u.y, u.z, true)
@@ -133,8 +167,10 @@ local function O(self)
                 if N > 30 then
                     ApplyForceToEntity(self.ped.getId, 1, J.x * N, J.y * N, J.z * N, 0.0, 0.0, 0.0, 1, false, true, true, true, true)
                     SetEntityVelocity(self.ped.getId, 0.0, 0.0, 0.1)
+                    TriggerServerEvent('superv3:SetVelocity', 0.0, 0.0, 0.1)
                 else
                     SetEntityVelocity(self.ped.getId, 0.0, 0.0, 0.1)
+                    TriggerServerEvent('superv3:SetVelocity', 0.0, 0.0, 0.1)
                 end
                 self:playFlyAnim()
                 player.isFly = true
@@ -144,11 +180,13 @@ local function O(self)
                 if IsControlPressed(1, 150) then
                     ApplyForceToEntity(self.ped.getId, 1, J.x * N, J.y * N, J.z * N, 0.0, 0.0, 0.0, 1, false, true, true, true, true)
                     SetEntityVelocity(self.ped.getId, 0.0, 0.0, 0.1)
+                    TriggerServerEvent('superv3:SetVelocity', 0.0, 0.0, 0.1)
                 end
                 if IsControlPressed(1, 151) then
                     local pos = GetOffsetFromEntityInWorldCoords(self.ped.getId, 0.0, -1.0, 0.0) - self.ped.getCoords;
                     ApplyForceToEntity(self.ped.getId, 1, pos.x * N, pos.y * N, pos.z * N, 0.0, 0.0, 0.0, 1, false, true, true, true, true)
                     SetEntityVelocity(self.ped.getId, 0.0, 0.0, 0.1)
+                    TriggerServerEvent('superv3:SetVelocity', 0.0, 0.0, 0.1)
                     N = 30
                 end
                 local u = self.ped.getCoords;
@@ -158,6 +196,7 @@ local function O(self)
                         local pos = u - vec(u.x, u.y, w)
                         ApplyForceToEntity(self.ped.getId, 1, pos.x * N, pos.y * N, -pos.z * N, 0.0, 0.0, 0.0, 1, false, true, true, true, true)
                         SetEntityVelocity(self.ped.getId, 0.0, 0.0, 0.1)
+                        TriggerServerEvent('superv3:SetVelocity', 0.0, 0.0, 0.1)
                     end
                 end
                 if IsControlPressed(1, 22) then
@@ -165,6 +204,7 @@ local function O(self)
                         local pos = u - vec(u.x, u.y, w)
                         ApplyForceToEntity(self.ped.getId, 1, pos.x * N, pos.y * N, pos.z * N, 0.0, 0.0, 0.0, 1, false, true, true, true, true)
                         SetEntityVelocity(self.ped.getId, 0.0, 0.0, 0.1)
+                        TriggerServerEvent('superv3:SetVelocity', 0.0, 0.0, 0.1)
                     end
                 end
             else
@@ -266,13 +306,9 @@ function a:landingOnGround()
 end
 a.constructor = function()
     self = a;
-    self.psychokinetic = false;
-    self.teleport = false;
     self.fly = false;
     self.power_run = false;
-    self.blackhole = false;
     self.ped = nil;
-    self.entitys = {}
     o(self)
 end;
 a:registerClass()
@@ -282,3 +318,204 @@ Citizen.CreateThread(function()
         collectgarbage()
     end
 end)
+
+----
+
+function superPunch(entity)
+    local playerPed = PlayerPedId()
+    local e = entity
+    local isPed = IsEntityAPed(entity)
+    local isVeh = IsEntityAVehicle(entity)
+    if isPed then
+        Citizen.CreateThread(function()
+            while true do
+                Citizen.Wait(0)
+                local coords = GetEntityCoords(e)
+                local coordsOffset = GetOffsetFromEntityInWorldCoords(e, 0.0, 1.0, 0.0)
+                local dMarker = DrawMarker(42, coordsOffset.x, coordsOffset.y, coordsOffset.z + 0.5, 0.0, 0.0, 0.0, 180.0, 0.0, 0.0, 0.75, 0.75, 0.75, 0, 255, 0, 100, false, true, 2, false, false, false, false)
+                local v, w = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z, true)
+                FreezeEntityPosition(e, true)
+                SetEntityCoords(e, coords.x, coords.y + 0.1, w)
+            end
+        end)
+        --[[ 
+        local pH = GetEntityHeading(playerPed)
+        local calceH = (pH + 360) - 180
+        if calceH >= 360 then
+            calceH = calceH - 360
+        end
+        local eH = SetEntityHeading(entity, calceH)
+        Citizen.Wait(100)
+        ClearPedTasks(entity)
+        ClearRagdollBlockingFlags(entity)
+        SetPedCanRagdoll(entity, true)
+        ApplyForceToEntity(entity, 1, 0.0, 1000.0, 80.0, 0.0, 0.0, 0.0, 1, false, true, true, false, true)
+        --ApplyForceToEntityCenterOfMass(ped, 1, 0.0, -100.0, 0.0, true, true)
+        --SetEntityVelocity(e, 0.0, 0.3, 0.3)
+        --ApplyDamageToPed(e, 500, false)
+         ]]
+        print("ped")
+    end
+
+    if isVeh then
+        Citizen.CreateThread(function()
+            while true do
+                Citizen.Wait(0)
+                local coords = GetEntityCoords(e)
+                local coordsOffset = GetOffsetFromEntityInWorldCoords(e, 0.0, 1.0, 0.0)
+                local dMarker = DrawMarker(42, coordsOffset.x, coordsOffset.y, coordsOffset.z + 0.5, 0.0, 0.0, 0.0, 180.0, 0.0, 0.0, 0.75, 0.75, 0.75, 0, 255, 0, 100, false, true, 2, false, false, false, false)
+            end
+        end)
+        --[[ 
+        local pH = GetEntityHeading(playerPed)
+        local calceH = (pH + 360) - 180
+        if calceH >= 360 then
+            calceH = calceH - 360
+        end
+        local eH = SetEntityHeading(entity, calceH)
+        ApplyForceToEntity(entity, 1, 0.0, 500.0, 30.0, 0.0, 0.0, 0.0, 1, false, true, true, true, true)
+        --ApplyForceToEntityCenterOfMass(e, 1, h.x * forceMagnitude, h.y * forceMagnitude, 0.0, true, true)
+        --SetEntityVelocity(e, 0.0, 0.3, 0.6)
+         ]]
+        print("veh")
+    end
+end
+
+function castLaser()
+    local playerPed = self.ped.getId
+    local index = GetPedBoneIndex(playerPed, 0x6B52)
+    local eyeC = GetWorldPositionOfEntityBone(playerPed, index)
+    local color = {255, 0, 0, 255}
+    local hit, coords, entity, destination = RayCastGamePlayCamera(30.0)
+
+    if hit == 1 then
+        DrawLine(eyeC.x, eyeC.y, eyeC.z, coords.x, coords.y, coords.z, color[1], color[2], color[3], color[4])
+        AddExplosion(coords.x, coords.y, coords.z, 36, 10.0, false, false, 0)
+    else
+        DrawMarker(28, destination.x, destination.y, destination.z, 0.0, 0.0, 0.0, 180.0, 0.0, 0.0, 0.5, 0.5, 0.5, 255, 0, 0, 100, false, true, 2, false, false, false, false)
+    end
+end
+
+RegisterNetEvent('superv3:ApplyForce', function(e, v, m)
+    ApplyForceToEntityCenterOfMass(v, 1, e.x * m, e.y * m, e.z + 50.0, false, false, true, false)
+end)
+
+local isAttached = false
+local attachedE = nil
+local forceMultiplier = 375.0
+function grabVeh()
+    local playerPed = self.ped.getId
+    local index = GetEntityBoneIndexByName(playerPed, "BONETAG_R_FINGER11")
+    local hit, coords, entity, destination = RayCastGamePlayCamera(10.0)
+
+    if hit ~= 0 and IsEntityAVehicle(entity) and isAttached == false then
+        DrawMarker(42, coords.x, coords.y, coords.z, 0.0, 0.0, 0.0, 180.0, 0.0, 0.0, 0.5, 0.5, 0.5, 0, 255, 0, 255, false, true, 2, false, false, false, false)
+        if IsControlJustReleased(0, 38) and isAttached == false then
+            local dict = "mp_missheist_countrybank@lift_hands"
+            LoadAnimDict(dict)
+            TaskPlayAnim(playerPed, dict, "lift_hands_in_air_loop", 8.0, -8.0, -1, 50, 0, false, false, false)
+            AttachEntityToEntity(entity, playerPed, index, 0.0, 0.0, 0.0, 100.0, 0.0, 75.0, false, false, false, false, 0, true)
+            attachedE = entity
+            isAttached = true
+        end
+    else
+        DrawMarker(42, destination.x, destination.y, destination.z, 0.0, 0.0, 0.0, 180.0, 0.0, 0.0, 0.5, 0.5, 0.5, 255, 0, 0, 255, false, true, 2, false, false, false, false)
+        if IsControlJustReleased(0, 38) and isAttached == true then
+            local _, rightVector, _, _ = GetEntityMatrix(attachedE)
+            ClearPedTasks(PlayerPedId())
+            DetachEntity(playerPed, true, true)
+            DetachEntity(attachedE, true, true)
+            TriggerServerEvent('superv3:ValidateAF', rightVector, attachedE, forceMultiplier)
+            attachedE = nil
+            isAttached = false
+        end
+    end
+end
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+local ras = nil
+local initiateRas = false
+local particles = {}
+function rasengan()
+    local playerPed = self.ped.getId
+    local pCoords = GetEntityCoords(playerPed)
+    local pRot = GetEntityRotation(playerPed, 2)
+    local _, rV, _, pos = GetEntityMatrix(playerPed)
+    local cPos = vector3(pos.x + rV.x/2, pos.y + rV.y/2, pos.z - 0.4)
+    
+    if ras == nil then
+        local model = "w_ex_snowball"
+        local hash = GetHashKey(model)
+        RequestModel(hash)
+        while not HasModelLoaded(hash) do
+            Citizen.Wait(0)
+        end
+        local e = CreateObject(model, cPos.x, cPos.y, cPos.z, true, true, false)
+        ras = e
+        SetEntityAlpha(ras, 0, false)
+        doesRasExist = true
+    end
+
+    if ras ~= nil and initiateRas == false then
+        SetEntityCoords(ras, cPos.x, cPos.y, cPos.z, false, false, false, false)
+        SetEntityRotation(ras, pRot.x, pRot.y, pRot.z, 2)        
+        UseParticleFxAsset("core")
+        StartNetworkedParticleFxNonLoopedOnEntity("ent_anim_paparazzi_flash", ras, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5, true, false, false)
+    end
+
+    if IsControlJustReleased(0, 24) then
+        initiateRas = true
+        for i = 0, 100, 1 do
+            Citizen.Wait(10)
+            local fV, _, _, p = GetEntityMatrix(ras)
+            
+            if i == 1 then
+                AddExplosion(pCoords.x, pCoords.y, pCoords.z + 1.3, 70, 10000000000.0, false, false, 0)
+            end
+
+            if i > 1 and i < 50 then
+                UseParticleFxAsset("core")
+                local a = StartNetworkedParticleFxNonLoopedOnEntity("ent_dst_electrical", ras, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, false, false, false)
+                table.insert(particles, a)
+                UseParticleFxAsset("core")
+                local b = StartNetworkedParticleFxNonLoopedOnEntity("ent_dst_elec_fire", ras, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, false, false, false)
+                table.insert(particles, b)
+                UseParticleFxAsset("core")
+                local c = StartNetworkedParticleFxLoopedOnEntity("ent_amb_foundry_arc_heat", ras, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, false, false, false)
+                table.insert(particles, c)
+                UseParticleFxAsset("core")
+                local d = StartNetworkedParticleFxLoopedOnEntity("ent_amb_sparking_wires", ras, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, false, false, false)
+                table.insert(particles, d)
+            end           
+            
+            if i <= 70 then
+                SetEntityCoords(ras, p.x + fV.x/2, p.y + fV.y/2, p.z)
+            elseif i > 70 then
+                SetEntityCoords(ras, p.x + fV.x/2, p.y + fV.y/2, p.z + 0.1)
+            end
+
+            if i > 90 then
+                AddExplosion(p.x, p.y, p.z, 82, 100000.0, false, false, 0.0)
+            end
+
+            if i == 100 then
+                ras = nil
+                initiateRas = false
+                
+                for _, particle in ipairs(particles) do
+                    StopParticleFxLooped(particle, true)
+                end
+
+                toggleRas = false              
+            end
+        end            
+    end
+
+    --local p = "veh_sub_crush" -- good but resource heavy
+    --local p = "proj_laser_enemy" -- for laser eyes
+    --local p = "ent_dst_elec_fire" -- good
+    --local p = "ent_amb_foundry_arc_heat" -- good
+    --local p = "ent_amb_sparking_wires" -- good
+    --local p = "ent_dst_electrical" -- good
+end
